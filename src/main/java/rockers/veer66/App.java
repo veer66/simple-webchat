@@ -1,13 +1,18 @@
 package rockers.veer66;
 
-/**
- * Hello world!
- *
- */
+import java.net.ServerSocket;
+import java.util.logging.Logger;
+
 public class App 
 {
-    public static void main( String[] args )
+	private static Logger logger = Logger.getLogger("simple-websocket");;
+	private static int PORT = 10005;
+    public static void main( String[] args ) throws Exception
     {
-        System.out.println( "Hello World!" );
+    	logger.info("INIT");
+    	var server = new ServerSocket(PORT);
+    	logger.info("Server start at " + PORT);
+    	var client = server.accept();
+    	logger.info("Connected");
     }
 }
