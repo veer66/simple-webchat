@@ -27,31 +27,25 @@
 			<version>4.11</version>
 			<scope>test</scope>
 		</dependency>
-		
-		<!-- <dependency> -->
-		<!--   <groupId>org.eclipse.jetty</groupId> -->
-		<!--   <artifactId>jetty-maven-plugin</artifactId> -->
-		<!--   <version>9.4.10.v20180503</version> -->
-		<!-- </dependency> -->
 
 	</dependencies>
 	<build>
-	<plugins>
-	  <plugin>
-		  <groupId>org.eclipse.jetty</groupId>
-		  <artifactId>jetty-maven-plugin</artifactId>
-		  <version>9.4.10.v20180503</version>
-	  </plugin>
-	  <plugin>
-		<groupId>org.apache.maven.plugins</groupId>
-		<artifactId>maven-jar-plugin</artifactId>
-		<version>3.1.0</version>
-	  </plugin>
-	  <plugin>
-		<groupId>org.apache.maven.plugins</groupId>
-		<artifactId>maven-war-plugin</artifactId>
-		<version>3.2.0</version>
-	  </plugin>
-	</plugins>
+		<plugins>
+			<plugin>
+				<groupId>org.eclipse.jetty</groupId>
+				<artifactId>jetty-maven-plugin</artifactId>
+				<version>9.4.10.v20180503</version>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>3.1.0</version>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-war-plugin</artifactId>
+				<version>3.2.0</version>
+			</plugin>
+		</plugins>
 	</build>
 </project>
