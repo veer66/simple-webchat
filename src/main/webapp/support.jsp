@@ -6,14 +6,14 @@
 	<body>
 		WS
 		<script>
-		 let sock = new WebSocket("ws://localhost:8080/ws?receptionist=1", "ws1")
+		 let sock = new WebSocket("ws://localhost:8080/ws?supporter=1", "ws1")
 		 console.log("SOCK = " + sock)
 		 sock.onmessage = function(evt) {
 			 console.log("RECV: " + evt.data)
 		 }
 		 sock.onopen = function() {
 			 console.log("OPEN")
-			 sock.send("KAKA")
+			 sock.send("KUKU")
 		 }
 		</script>
 	</body>

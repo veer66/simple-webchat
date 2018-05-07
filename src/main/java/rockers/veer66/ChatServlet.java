@@ -17,17 +17,16 @@ import javax.websocket.server.ServerEndpoint;
 
 @ServerEndpoint("/ws")
 public class ChatServlet {
-	
+
 	private static Logger logger = Logger.getLogger("simple-chat");
 	private static ConcurrentLinkedQueue<Message> msgQueue = new ConcurrentLinkedQueue<>();
 	private static ConcurrentHashMap<String, ChatServlet> rooms = new ConcurrentHashMap<>();
-	private static Set<ChatServlet> receptionists = Collections.synchronizedSet(new HashSet<>());
-	
-	
+	private static Set<ChatServlet> supporters = Collections.synchronizedSet(new HashSet<>());
+
 	Session session;
 	String room;
-	boolean isReceptionist;
-	
+	SenderType sender;
+
 	public Session getSession() {
 		return session;
 	}
@@ -37,48 +36,74 @@ public class ChatServlet {
 	}
 
 	@OnMessage
-	public void echo(Session session, String msg) {
+	public void receive(Session session, String text) {
+		var msg = new Message(room, text, sender);
+		msgQueue.add(msg);
+		submit_all();
+	}
+
+	public static void submit_all() {
 		try {
-			if (session.isOpen()) {
-				session.getBasicRemote().sendText("@@@");
+			while (!supporters.isEmpty() && !msgQueue.isEmpty()) {
+				submit();
 			}
 		} catch (IOException e) {
-			System.out.println(e);
+			logger.info("Cannot submit message: " + e);
 		}
 	}
-	
+
+	public static void submit() throws IOException {
+		var msg = msgQueue.poll();
+		switch (msg.sender) {
+		case CUSTOMER:
+			for (var supporter : supporters) {
+				supporter.getSession().getBasicRemote().sendText(msg.getText());
+			}
+			break;
+		case SUPPORTER:
+			var consumer = rooms.get(msg.room);
+			if (consumer != null) {
+				consumer.getSession().getBasicRemote().sendText(msg.getText());
+			}
+			break;
+		}
+	}
+
 	@OnOpen
 	public void start(Session session) {
-		logger.info("start chat");		
+		logger.info("start chat");
 		setSession(session);
-		var receptionistQuery = session.getRequestParameterMap().get("receptionist");
-		if (receptionistQuery != null && 
-				receptionistQuery.size() > 0 && 
-				receptionistQuery.get(0).equals("1")) {
-			logger.info("Receptionist");
-			isReceptionist = true;
-			receptionists.add(this);
+		var supporterQuery = session.getRequestParameterMap().get("supporter");
+		if (supporterQuery != null && supporterQuery.size() > 0 && 
+				supporterQuery.get(0).equals("1")) {
+			logger.info("Supporter");
+			supporters.add(this);
+			sender = SenderType.SUPPORTER;
 		} else {
 			var roomQuery = session.getRequestParameterMap().get("room");
 			if (roomQuery != null && roomQuery.size() == 1) {
-				logger.info("Guest");
+				logger.info("Customer");
 				room = roomQuery.get(0);
 				rooms.put(room, this);
-				isReceptionist = false;
-			}						
+				sender = SenderType.CUSTOMER;
+			}
 		}
+		submit_all();
 	}
-	
+
 	@OnClose
 	public void end() {
 		logger.info("end chat");
-		if (isReceptionist) {
-			receptionists.remove(this);
-		} else {
+		switch (sender) {
+		case CUSTOMER:
 			rooms.remove(room);
+			break;
+		case SUPPORTER:
+			supporters.remove(this);
+			break;
 		}
 	}
-	
+
 	@OnError
 	public void onError(Throwable t) throws Throwable {
 		logger.info("err: " + t);

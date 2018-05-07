@@ -15,15 +15,22 @@
          }
 
 		 let room = genRoom()
+		 console.log("ROOM = " + room)
+		 
 		 let sock = new WebSocket("ws://localhost:8080/ws?room="+room, "ws1")
+		 
 		 console.log("SOCK = " + sock)
+
+		 
 		 sock.onmessage = function(evt) {
 			 console.log("RECV: " + evt.data)
 		 }
+		 
 		 sock.onopen = function() {
 			 console.log("OPEN")
 			 sock.send("KAKA")
 		 }
+		 
 		</script>
 	</body>
 </html>
