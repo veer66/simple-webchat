@@ -5,7 +5,7 @@
 ### Run server
 
 ````
-mvn clean compile jetty run
+mvn clean compile jetty:run
 ````
 
 ### Open customer chat
