@@ -1,13 +1,13 @@
 package rocks.veer66;
 
 import java.io.IOException;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.io.InputStreamReader;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.websocket.OnClose;
@@ -17,6 +17,8 @@ import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
 
+import com.google.gson.Gson;
+
 @ServerEndpoint("/ws")
 public class ChatServlet {
 
@@ -24,6 +26,21 @@ public class ChatServlet {
 	private static ConcurrentLinkedQueue<Message> msgQueue = new ConcurrentLinkedQueue<>();
 	private static ConcurrentHashMap<String, ChatServlet> rooms = new ConcurrentHashMap<>();
 	private static Set<ChatServlet> supporters = Collections.synchronizedSet(new HashSet<>());
+
+	private static String modUrl;
+
+	static {
+		try {
+			var in = ModMsgHelper.class.getResource("/config.json").openConnection().getInputStream();
+			var isr = new InputStreamReader(in, "UTF-8");
+			Config conf = new Gson().fromJson(isr, Config.class);
+			isr.close();
+			in.close();
+			modUrl = conf.mod_url;
+		} catch (IOException e) {
+			logger.info("Cannot read config: " + e.toString());
+		}
+	}
 
 	Session session;
 	String room;
@@ -42,6 +59,7 @@ public class ChatServlet {
 		switch (sender) {
 		case CUSTOMER:
 			var msg = new Message(room, text, sender);
+			var additionalMsg = ModMsgHelper.modMsg(modUrl, new MessageWrapper(SenderType.SUPPORTER, "สวัสดีครับ"));
 			msgQueue.add(msg);
 			submit_all();
 			break;
@@ -56,7 +74,7 @@ public class ChatServlet {
 			}
 			break;
 		}
-		
+
 	}
 
 	public static void submit_all() {
@@ -69,21 +87,21 @@ public class ChatServlet {
 		}
 	}
 
-	public static void submit() throws IOException {		
+	public static void submit() throws IOException {
 		var msg = msgQueue.poll();
 		var consumer = rooms.get(msg.room);
 		switch (msg.sender) {
 		case CUSTOMER:
-			for (var supporter : supporters) {				
+			for (var supporter : supporters) {
 				supporter.getSession().getBasicRemote().sendText(msg.getRoom() + ":" + msg.getText());
 			}
-			
+
 			if (consumer != null) {
 				consumer.getSession().getBasicRemote().sendText(msg.getText());
 			}
 			break;
-		case SUPPORTER:		
-			for (var supporter : supporters) {				
+		case SUPPORTER:
+			for (var supporter : supporters) {
 				supporter.getSession().getBasicRemote().sendText(msg.getRoom() + ":" + msg.getText());
 			}
 			if (consumer != null) {
