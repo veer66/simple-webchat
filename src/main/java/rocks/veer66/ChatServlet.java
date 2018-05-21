@@ -58,8 +58,9 @@ public class ChatServlet {
 	public void receive(Session session, String text) {
 		switch (sender) {
 		case CUSTOMER:
-			var msg = new Message(room, text, sender);
-			var additionalMsg = ModMsgHelper.modMsg(modUrl, new MessageWrapper(SenderType.SUPPORTER, "สวัสดีครับ"));
+			var custAddiText = ModMsgHelper.modMsg(modUrl, new MessageWrapper(SenderType.CUSTOMER, text));
+            var modCustText = text + "\n[" + custAddiText + "]";
+            var msg = new Message(room, modCustText, sender);
 			msgQueue.add(msg);
 			submit_all();
 			break;
@@ -67,9 +68,11 @@ public class ChatServlet {
 			var m = Pattern.compile("([^:]+): (.+)").matcher(text);
 			if (m.matches() && m.groupCount() == 2) {
 				var room = m.group(1);
-				var _text = m.group(2);
-				var _msg = new Message(room, _text, sender);
-				msgQueue.add(_msg);
+				var suppText = m.group(2);
+                var suppAddiText = ModMsgHelper.modMsg(modUrl, new MessageWrapper(SenderType.SUPPORTER, suppText));
+                var modSuppText = suppText + "\n[" + suppAddiText + "]";
+                var suppMsg = new Message(room, modSuppText, sender);
+				msgQueue.add(suppMsg);
 				submit_all();
 			}
 			break;
